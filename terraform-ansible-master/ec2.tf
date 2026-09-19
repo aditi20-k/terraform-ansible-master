@@ -1,35 +1,55 @@
-# Key Pair
+# =========================================================
+# KEY PAIR
+# =========================================================
+
 resource "aws_key_pair" "my_key_new" {
   key_name   = "terra-key-ansible"
-  public_key = file("terra-key-ansible.pub")
+  public_key = file("${path.module}/terra-key-ansible.pub")
 }
 
-# Default VPC
+
+# =========================================================
+# DEFAULT VPC
+# =========================================================
+
 resource "aws_default_vpc" "default" {
 }
 
-# Security Group
+
+# =========================================================
+# SECURITY GROUP
+# =========================================================
+
 resource "aws_security_group" "my_security_group" {
   name        = "automate-sg"
   description = "Terraform generated Security Group"
   vpc_id      = aws_default_vpc.default.id
 
-  # Inbound - SSH
+  # SSH
   ingress {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
-    description = "SSH open"
+    description = "SSH access"
   }
 
-  # Inbound - HTTP
+  # HTTP
   ingress {
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
-    description = "HTTP open"
+    description = "HTTP access"
+  }
+
+  # HTTPS
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "HTTPS access"
   }
 
   # Outbound
@@ -38,7 +58,7 @@ resource "aws_security_group" "my_security_group" {
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
-    description = "All outbound access"
+    description = "All outbound traffic"
   }
 
   tags = {
@@ -46,8 +66,13 @@ resource "aws_security_group" "my_security_group" {
   }
 }
 
-# EC2 Instances
+
+# =========================================================
+# EC2 INSTANCES
+# =========================================================
+
 resource "aws_instance" "my_instance" {
+
   for_each = {
     TWS-Junoon-Master = "ami-033afab6c0b6982cf"
     TWS-Junoon-1      = "ami-05401e1394491333f"
@@ -55,17 +80,18 @@ resource "aws_instance" "my_instance" {
     TWS-Junoon-3      = "ami-03d7696ffeb1b45cc"
   }
 
-  depends_on = [
-    aws_security_group.my_security_group,
-    aws_key_pair.my_key_new
+  ami           = each.value
+  instance_type = "t3.micro"
+
+  # Terraform-created key pair
+  key_name = aws_key_pair.my_key_new.key_name
+
+  # Security Group
+  security_groups = [
+    aws_security_group.my_security_group.name
   ]
 
-  key_name        = aws_key_pair.my_key_new.key_name
-  security_groups = [aws_security_group.my_security_group.name]
-
-  instance_type = "t3.micro"
-  ami           = each.value
-
+  # Root disk
   root_block_device {
     volume_size = 10
     volume_type = "gp3"
