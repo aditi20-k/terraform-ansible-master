@@ -74,10 +74,10 @@ resource "aws_security_group" "my_security_group" {
 resource "aws_instance" "my_instance" {
 
   for_each = {
-    TWS-Junoon-Master = "ami-033afab6c0b6982cf"
-    TWS-Junoon-1      = "ami-05401e1394491333f"
-    TWS-Junoon-2      = "ami-05401e1394491333f"
-    TWS-Junoon-3      = "ami-03d7696ffeb1b45cc"
+    TWS-Junoon-Master = "ami-0aba19e56f3eaec05"
+    TWS-Junoon-1      = "ami-0aba19e56f3eaec05"
+    TWS-Junoon-2      = "ami-07ba4be829b9bf20a"
+    TWS-Junoon-3      = "ami-06cfeaaa22092f09d"
   }
 
   ami           = each.value
